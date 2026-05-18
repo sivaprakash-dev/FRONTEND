@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Api_Repo/Api_Repo.csproj" />
+  <Project Path="MVC38/MVC38.csproj" Id="c56ab415-da5c-4b81-b17e-2acf103387fd" />
+</Solution>
