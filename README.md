@@ -23,6 +23,21 @@
 
 </div>
 
+<div align="center">
+
+<a href="www.linkedin.com/in/siva-prakash-7352653b3">
+  <img src="https://img.shields.io/badge/LINKEDIN-CONNECT-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" />
+</a>
+
+<a href="mailto:sivaprakash09042005@gmail.com">
+  <img src="https://img.shields.io/badge/GMAIL-DROP_A_MAIL-EA4335?style=for-the-badge&logo=gmail&logoColor=white" />
+</a>
+
+<a href="https://github.com/sivaprakash-dev/FRONTEND">
+  <img src="https://img.shields.io/badge/GITHUB-FOLLOW-181717?style=for-the-badge&logo=github&logoColor=white" />
+</a>
+
+</div>
 ---
 
 ## 👨‍💻 About Me
