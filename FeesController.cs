@@ -1,126 +1,144 @@
-﻿using Hostel_Management_System.DTO;
-using Hostel_Management_System.Model;
-using Hostel_Management_System.Model.DbContext;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Hostel_Management_Systems.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.Text;
 
-namespace Hostel_Management_System.Controllers
+namespace Hostel_MVC.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class FeesController : ControllerBase
+    public class FeesController : Controller
     {
-        private readonly HostelDbContext _context;
+        private readonly HttpClient _client;
 
-        public FeesController(HostelDbContext context)
+        public FeesController(IHttpClientFactory factory)
         {
-            _context = context;
+            _client = factory.CreateClient();
+
+            _client.BaseAddress =
+                new Uri("https://localhost:7255/api");
         }
 
-        // =========================================
-        // GET ALL FEES
-        // ADMIN ONLY
-        // =========================================
+        private void AddToken()
+        {
+            var token =
+                HttpContext.Session
+                    .GetString("token");
 
-        [Authorize(Roles = "Admin")]
+            if (!string.IsNullOrEmpty(token))
+            {
+                _client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers
+                    .AuthenticationHeaderValue(
+                        "Bearer",
+                        token);
+            }
+        }
+
+        // ==========================
+        // FEES LIST
+        // ==========================
+
+        public async Task<IActionResult> FeesIndex()
+        {
+            AddToken();
+
+            var response =
+                await _client.GetAsync(
+                    "api/Fees");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json =
+                    await response.Content
+                        .ReadAsStringAsync();
+
+                var data =
+                    JsonConvert.DeserializeObject
+                    <List<Fees>>(json);
+
+                return View(data);
+            }
+
+            return View();
+        }
+
+        // ==========================
+        // CREATE PAGE
+        // ==========================
 
         [HttpGet]
-        public async Task<IActionResult> GetFees()
+        public IActionResult FeesCreate()
         {
-            var data = await _context.Fees.ToListAsync();
-
-            return Ok(data);
+            return View();
         }
 
-        // =========================================
-        // GET FEE BY STUDENT ID
-        // ADMIN + STUDENT
-        // =========================================
-
-        [Authorize(Roles = "Admin,Student")]
-
-        [HttpGet("{studentId}")]
-        public async Task<IActionResult> GetFeeByStudentId(
-            int studentId)
-        {
-            var data = await _context.Fees
-                .Where(x => x.StudentId == studentId)
-                .ToListAsync();
-
-            return Ok(data);
-        }
-
-        // =========================================
-        // ADD FEE
-        // ADMIN ONLY
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
+        // ==========================
+        // CREATE
+        // ==========================
 
         [HttpPost]
-        public async Task<IActionResult> AddFee(Fees fee)
+        public async Task<IActionResult> FeesCreate(
+            Fees vm)
         {
-            fee.PaymentStatus = "Pending";
+            AddToken();
 
-            fee.PaymentDate = DateTime.Now;
+            var json =
+                JsonConvert.SerializeObject(vm);
 
-            _context.Fees.Add(fee);
+            var content =
+                new StringContent(
+                    json,
+                    Encoding.UTF8,
+                    "application/json");
 
-            await _context.SaveChangesAsync();
+            var response =
+                await _client.PostAsync(
+                    "api/Fees",
+                    content);
 
-            return Ok("Fee Added Successfully");
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction(
+                    "FeesIndex");
+            }
+
+            return View(vm);
         }
 
-        // =========================================
-        // PAY FEE
-        // STUDENT ONLY
-        // =========================================
 
-        [Authorize(Roles = "Student")]
-
-        [HttpPut("{id}")]
+        [HttpGet]
         public async Task<IActionResult> PayFee(int id)
         {
-            var data = await _context.Fees.FindAsync(id);
+            AddToken();
 
-            if (data == null)
+            var response =
+                await _client.PutAsync(
+                    $"api/Fees/{id}",
+                    null);
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound("Fee Not Found");
+                return RedirectToAction("Index");
             }
 
-            data.PaymentStatus = "Paid";
-
-            data.PaymentDate = DateTime.Now;
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Fee Paid Successfully");
+            return RedirectToAction("Index");
         }
 
-        // =========================================
-        // DELETE FEE
-        // ADMIN ONLY
-        // =========================================
+        // ==========================
+        // DELETE
+        // ==========================
 
-        [Authorize(Roles = "Admin")]
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteFee(int id)
+        [HttpGet]
+        public async Task<IActionResult> Delete(
+            int id)
         {
-            var data = await _context.Fees.FindAsync(id);
+            AddToken();
 
-            if (data == null)
-            {
-                return NotFound("Fee Not Found");
-            }
+            var response =
+                await _client.DeleteAsync(
+                    $"api/Fees/{id}");
 
-            _context.Fees.Remove(data);
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Fee Deleted Successfully");
+            return RedirectToAction(
+                "FeesIndex");
         }
     }
 }

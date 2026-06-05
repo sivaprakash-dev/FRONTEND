@@ -1,113 +1,179 @@
-﻿using Hostel_Management_System.Model;
-using Hostel_Management_System.Model.DbContext;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Hostel_Management_Systems.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.Text;
 
-namespace Hostel_Management_System.Controllers
+namespace Hostel_MVC.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ComplaintController : ControllerBase
+    public class ComplaintController : Controller
     {
-        private readonly HostelDbContext _context;
+        private readonly HttpClient _client;
 
-        public ComplaintController(HostelDbContext context)
+        public ComplaintController(
+            IHttpClientFactory factory)
         {
-            _context = context;
+            _client = factory.CreateClient();
+
+            _client.BaseAddress =
+                new Uri("https://localhost:7255/");
         }
 
-        // =========================================
-        // GET ALL COMPLAINTS
-        // ADMIN ONLY
-        // =========================================
+        // ============================
+        // TOKEN
+        // ============================
 
-        [Authorize(Roles = "Admin")]
+        private void AddToken()
+        {
+            var token =
+                HttpContext.Session
+                    .GetString("token");
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                _client.DefaultRequestHeaders
+                    .Authorization =
+                    new System.Net.Http.Headers
+                    .AuthenticationHeaderValue(
+                        "Bearer",
+                        token);
+            }
+        }
+
+        // ============================
+        // COMPLAINT LIST
+        // ============================
+
+        public async Task<IActionResult> CompIndex()
+        {
+            AddToken();
+
+            var response =
+                await _client.GetAsync(
+                    "api/Complaint");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json =
+                    await response.Content
+                        .ReadAsStringAsync();
+
+                var data =
+                    JsonConvert.DeserializeObject
+                    <List<Complaint>>(json);
+
+                return View(data);
+            }
+
+            return View();
+        }
+
+        // ============================
+        // CREATE PAGE
+        // ============================
 
         [HttpGet]
-        public async Task<IActionResult> GetComplaints()
+        public IActionResult CompCreate()
         {
-            var data = await _context.Complaints
-                .ToListAsync();
-
-            return Ok(data);
+            return View();
         }
 
-        // =========================================
-        // ADD COMPLAINT
-        // STUDENT ONLY
-        // =========================================
-
-        [Authorize(Roles = "Admin,Student")]
+        // ============================
+        // CREATE COMPLAINT
+        // ============================
 
         [HttpPost]
-        public async Task<IActionResult> AddComplaint(
-            Complaint complaint)
+        public async Task<IActionResult> CompCreate(Complaint vm)
         {
-            complaint.Status = "Pending";
+            AddToken();
 
-            complaint.CreatedDate = DateTime.Now;
+            var json =
+                JsonConvert.SerializeObject(vm);
 
-            _context.Complaints.Add(complaint);
+            var content =
+                new StringContent(
+                    json,
+                    Encoding.UTF8,
+                    "application/json");
 
-            await _context.SaveChangesAsync();
+            var response =
+                await _client.PostAsync(
+                    "api/Complaint",
+                    content);
 
-            return Ok("Complaint Added Successfully");
-        }
-
-        // =========================================
-        // UPDATE STATUS
-        // ADMIN ONLY
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateComplaint(
-            int id,
-            Complaint complaint)
-        {
-            var data = await _context.Complaints
-                .FindAsync(id);
-
-            if (data == null)
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound("Complaint Not Found");
+                return RedirectToAction(
+                    "CompIndex");
             }
 
-            data.Status = complaint.Status;
+            ViewBag.Error =
+                await response.Content
+                    .ReadAsStringAsync();
 
-            await _context.SaveChangesAsync();
-
-            return Ok("Complaint Status Updated");
+            return View(vm);
         }
 
-        // =========================================
-        // DELETE COMPLAINT
-        // ADMIN ONLY
-        // =========================================
+        // ============================
+        // UPDATE STATUS PAGE
+        // ============================
 
-        [Authorize(Roles = "Admin")]
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteComplaint(
+        [HttpGet]
+        public IActionResult StatusUpdate(
             int id)
         {
-            var data = await _context.Complaints
-                .FindAsync(id);
+            ViewBag.Id = id;
 
-            if (data == null)
-            {
-                return NotFound("Complaint Not Found");
-            }
-
-            _context.Complaints.Remove(data);
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Complaint Deleted Successfully");
+            return View();
         }
 
+        // ============================
+        // UPDATE STATUS
+        // ============================
+
+        [HttpPost]
+        public async Task<IActionResult> StatusUpdate(
+            int id,
+            Complaint vm)
+        {
+            AddToken();
+
+            var json =
+                JsonConvert.SerializeObject(vm);
+
+            var content =
+                new StringContent(
+                    json,
+                    Encoding.UTF8,
+                    "application/json");
+
+            var response =
+                await _client.PutAsync(
+                    $"api/Complaint/{id}",
+                    content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction(
+                    "CompIndex");
+            }
+
+            return View(vm);
+        }
+
+        // ============================
+        // DELETE
+        // ============================
+
+        [HttpGet]
+        public async Task<IActionResult> CompDelete(int id)
+        {
+            AddToken();
+
+            await _client.DeleteAsync(
+                $"api/Complaint/{id}");
+
+            return RedirectToAction(
+                "CompIndex");
+        }
     }
 }

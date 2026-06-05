@@ -1,139 +1,256 @@
-﻿using Hostel_Management_System.Model;
-using Hostel_Management_System.Model.DbContext;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Hostel_Management_Systems.Models;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace Hostel_Management_System.Controllers
+using Newtonsoft.Json;
+
+using System.Text;
+
+namespace Hostel_MVC.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class StudentController : ControllerBase
+    public class StudentController : Controller
     {
-        private readonly HostelDbContext _context;
+        private readonly HttpClient _client;
 
-        public StudentController(HostelDbContext context)
+        public StudentController(
+            IHttpClientFactory factory)
         {
-            _context = context;
+            _client = factory.CreateClient();
+
+            _client.BaseAddress =
+                new Uri("https://localhost:7255/");
         }
 
         // =========================================
-        // GET ALL STUDENTS
-        // ADMIN ONLY
+        // GET TOKEN
         // =========================================
 
-        [Authorize(Roles = "Admin")]
+        private void AddToken()
+        {
+            var token =
+                HttpContext.Session
+                    .GetString("token");
+
+            _client.DefaultRequestHeaders
+                .Authorization =
+                new System.Net.Http.Headers
+                .AuthenticationHeaderValue(
+                    "Bearer",
+                    token.Replace("\"", "")
+                         .Replace("{token:", "")
+                         .Replace("}", ""));
+        }
+
+        // =========================================
+        // STUDENT LIST
+        // =========================================
+
+        public async Task<IActionResult> Indexs(
+     string search,
+     int page = 1)
+        {
+            AddToken();
+
+            var response =
+                await _client.GetAsync("api/Student");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return View(new List<Student>());
+            }
+
+            var json =
+                await response.Content.ReadAsStringAsync();
+
+            var students =
+                JsonConvert.DeserializeObject<List<Student>>(json);
+
+            // Global Search
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+
+                students = students.Where(x =>
+
+                    (!string.IsNullOrEmpty(x.Name) &&
+                     x.Name.ToLower().Contains(search))
+
+                    ||
+
+                    (!string.IsNullOrEmpty(x.Gender) &&
+                     x.Gender.ToLower().Contains(search))
+
+                    ||
+
+                    x.Age.ToString().Contains(search)
+
+                    ||
+
+                    (!string.IsNullOrEmpty(x.Mobile) &&
+                     x.Mobile.Contains(search))
+
+                    ||
+
+                    (!string.IsNullOrEmpty(x.Email) &&
+                     x.Email.ToLower().Contains(search))
+
+                ).ToList();
+            }
+
+            int pageSize = 5;
+
+            int totalRecords = students.Count();
+
+            int totalPages =
+                (int)Math.Ceiling((double)totalRecords / pageSize);
+
+            students = students
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            ViewBag.Search = search;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+
+            return View(students);
+        }
+
+        // =========================================
+        // CREATE PAGE
+        // =========================================
 
         [HttpGet]
-        public async Task<IActionResult> GetStudents()
+        public IActionResult Create()
         {
-            var data = await _context.Students.ToListAsync();
-            return Ok(data);
+            return View();
         }
 
         // =========================================
-        // GET STUDENT BY ID
-        // ADMIN + STUDENT
+        // CREATE
         // =========================================
-
-        [Authorize(Roles = "Admin,Student")]
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetStudentById(int id)
-        {
-            var data = await _context.Students
-                .FindAsync(id);
-
-            if (data == null)
-            {
-                return NotFound("Student Not Found");
-            }
-
-            return Ok(data);
-        }
-
-        // =========================================
-        // ADD STUDENT
-        // ADMIN ONLY
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
 
         [HttpPost]
-        public async Task<IActionResult> AddStudent(Student student)
+        public async Task<IActionResult> Create(
+            Student vm)
         {
-            student.Role = "Student";
+            AddToken();
 
-            _context.Students.Add(student);
+            var json =
+                JsonConvert.SerializeObject(vm);
 
-            await _context.SaveChangesAsync();
+            var content =
+                new StringContent(
+                    json,
+                    Encoding.UTF8,
+                    "application/json");
 
-            return Ok("Student Added Successfully");
-        }
+            var response =
+                await _client.PostAsync(
+                    "api/Student",
+                    content);
 
-        // =========================================
-        // UPDATE STUDENT
-        // ADMIN ONLY
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateStudent(
-            int id,
-            Student student)
-        {
-            var data = await _context.Students
-                .FindAsync(id);
-
-            if (data == null)
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound("Student Not Found");
+                return RedirectToAction("Indexs");
             }
 
-            data.Name = student.Name;
-
-            data.Gender = student.Gender;
-
-            data.Age = student.Age;
-
-            data.Mobile = student.Mobile;
-
-            data.Email = student.Email;
-
-            data.Address = student.Address;
-
-            data.Photo = student.Photo;
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Student Updated Successfully");
+            return View();
         }
 
-        // =========================================
-        // DELETE STUDENT
-        // ADMIN ONLY
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteStudent(int id)
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
         {
-            var data = await _context.Students
-                .FindAsync(id);
+            AddToken();
 
-            if (data == null)
+            var response =
+                await _client.GetAsync(
+                    $"api/Student/{id}");
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound("Student Not Found");
+                var json =
+                    await response.Content
+                        .ReadAsStringAsync();
+
+                var data =
+                    JsonConvert.DeserializeObject
+                    <Student>(json);
+
+                return View(data);
             }
 
-            _context.Students.Remove(data);
+            return View();
+        }
 
-            await _context.SaveChangesAsync();
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id,Student vm)
+        {
+            AddToken();
 
-            return Ok("Student Deleted Successfully");
+            var json =
+                JsonConvert.SerializeObject(vm);
+
+            var content =
+                new StringContent(
+                    json,
+                    Encoding.UTF8,
+                    "application/json");
+
+            var response =
+                await _client.PutAsync(
+                    $"api/Student/{id}",
+                    content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction("Indexs");
+            }
+
+            return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            AddToken();
+
+            var response =
+                await _client.DeleteAsync(
+                    $"api/Student/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                return RedirectToAction("Indexs");
+            }
+
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            AddToken();
+
+            var response =
+                await _client.GetAsync(
+                    $"api/Student/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json =
+                    await response.Content
+                        .ReadAsStringAsync();
+
+                var data =
+                    JsonConvert.DeserializeObject
+                    <Student>(json);
+
+                return View(data);
+            }
+
+            return View();
         }
     }
 }

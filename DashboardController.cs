@@ -1,59 +1,75 @@
-﻿using Hostel_Management_System.Model.DbContext;
-using Hostel_Management_System.Model;
-using Microsoft.AspNetCore.Authorization;
+﻿using Hostel_Management_Systems.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.Net.Http.Headers;
 
-namespace Hostel_Management_System.Controllers
+namespace Hostel_Management_Systems.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class DashboardController : ControllerBase
+    public class DashboardController : Controller
     {
-        private readonly HostelDbContext _context;
+        private readonly HttpClient _client;
 
-        public DashboardController(HostelDbContext context)
+        public DashboardController(
+            IHttpClientFactory factory)
         {
-            _context = context;
+            _client = factory.CreateClient();
+
+            _client.BaseAddress =
+                new Uri("https://localhost:7255/api/");
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetDashboard()
+        public async Task<IActionResult> Index()
         {
-            Dashboard dashboard = new Dashboard()
+            // SESSION TOKEN
+
+            var token =
+                HttpContext.Session
+                    .GetString("token");
+
+            // NOT LOGIN
+
+            if (string.IsNullOrEmpty(token))
             {
-                TotalStudents =
-                    await _context.Students.CountAsync(),
+                return RedirectToAction(
+                    "Login",
+                    "Account");
+            }
 
-                TotalRooms =
-                    await _context.Rooms.CountAsync(),
+            // TOKEN SET
 
-                AvailableRooms =
-                    await _context.Rooms
-                        .CountAsync(x => x.Status == "Available"),
+            _client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue(
+                    "Bearer",
+                    token);
 
-                FullRooms =
-                    await _context.Rooms
-                        .CountAsync(x => x.Status == "Full"),
+            // API CALL
 
-                PendingComplaints =
-                    await _context.Complaints
-                        .CountAsync(x => x.Status == "Pending"),
+            var response =
+                await _client.GetAsync(
+                    "Dashboard");
 
-                ResolvedComplaints =
-                    await _context.Complaints
-                        .CountAsync(x => x.Status == "Resolved"),
+            // SUCCESS
 
-                PendingFees =
-                    await _context.Fees
-                        .CountAsync(x => x.PaymentStatus == "Pending"),
+            if (response.IsSuccessStatusCode)
+            {
+                var json =
+                    await response.Content
+                        .ReadAsStringAsync();
 
-                PaidFees =
-                    await _context.Fees
-                        .CountAsync(x => x.PaymentStatus == "Paid")
-            };
+                var data =
+                    JsonConvert.DeserializeObject<Dashboard>(json);
 
-            return Ok(dashboard);
+                return View(data);
+            }
+
+            // FAIL
+
+            HttpContext.Session.Clear();
+
+            return RedirectToAction(
+                "Login",
+                "Account");
         }
     }
 }

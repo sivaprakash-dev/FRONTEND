@@ -1,132 +1,117 @@
-﻿using Hostel_Management_System.Model;
-using Hostel_Management_System.Model.DbContext;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Hostel_Management_Systems.Models;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace Hostel_Management_System.Controllers
+using Newtonsoft.Json;
+
+using System.Text;
+
+namespace Hostel_MVC.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class RoomAllocationController : ControllerBase
+    public class RoomAllocationController : Controller
     {
-        private readonly HostelDbContext _context;
+        private readonly HttpClient _client;
 
-        public RoomAllocationController(HostelDbContext context)
+        public RoomAllocationController(
+            IHttpClientFactory factory)
         {
-            _context = context;
+            _client = factory.CreateClient();
+
+            _client.BaseAddress =
+                new Uri("https://localhost:7255/");
         }
 
-        // =========================================
-        // GET ALL ALLOCATIONS
-        // =========================================
+        // =====================================
+        // TOKEN
+        // =====================================
 
-        [Authorize(Roles = "Admin")]
+        private void AddToken()
+        {
+            var token = HttpContext.Session.GetString("token");
+
+            if (string.IsNullOrEmpty(token))
+            {
+                return;
+            }
+
+            _client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue(
+                    "Bearer",
+                    token);
+        }
+
+        // =====================================
+        // ALLOCATION LIST
+        // =====================================
+
+        public async Task<IActionResult> Indes()
+        {
+            AddToken();
+
+            var response =
+                await _client.GetAsync("api/RoomAllocation");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json =
+                    await response.Content
+                        .ReadAsStringAsync();
+
+                var data =
+                    JsonConvert.DeserializeObject
+                    <List<RoomAllocation>>(json);
+
+                return View(data);
+            }
+
+            return View();
+        }
+
+        // =====================================
+        // CREATE PAGE
+        // =====================================
 
         [HttpGet]
-        public async Task<IActionResult> GetAllocations()
+        public IActionResult RoomAllCreate()
         {
-            var data = await _context.RoomAllocations
-                .ToListAsync();
-
-            return Ok(data);
+            return View();
         }
 
-        // =========================================
-        // ALLOCATE ROOM
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
+        // =====================================
+        // CREATE
+        // =====================================
 
         [HttpPost]
-        public async Task<IActionResult> AllocateRoom(
-            RoomAllocation allocation)
+        public async Task<IActionResult> RoomAllCreate(RoomAllocation vm)
         {
-            // STUDENT CHECK
+            AddToken();
 
-            var student = await _context.Students
-                .FindAsync(allocation.StudentId);
+            var json =
+                JsonConvert.SerializeObject(vm);
 
-            if (student == null)
+            var content =
+                new StringContent(
+                    json,
+                    Encoding.UTF8,
+                    "application/json");
+
+            var response =
+                await _client.PostAsync(
+                    "api/RoomAllocation",
+                    content);
+
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound("Student Not Found");
+                return RedirectToAction("Indes");
             }
 
-            // ROOM CHECK
+            // API Error Message
+            var errorMessage =
+                await response.Content.ReadAsStringAsync();
 
-            var room = await _context.Rooms
-                .FindAsync(allocation.RoomId);
+            ViewBag.Error = errorMessage;
 
-            if (room == null)
-            {
-                return NotFound("Room Not Found");
-            }
-
-            // ROOM FULL CHECK
-
-            if (room.OccupiedBeds >= room.Capacity)
-            {
-                return BadRequest("Room Full");
-            }
-
-            // ALLOCATION
-
-            allocation.AllocationDate = DateTime.Now;
-
-            allocation.Status = "Allocated";
-
-            _context.RoomAllocations.Add(allocation);
-
-            // UPDATE OCCUPIED BEDS
-
-            room.OccupiedBeds++;
-
-            // UPDATE ROOM STATUS
-
-            if (room.OccupiedBeds == room.Capacity)
-            {
-                room.Status = "Full";
-            }
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Room Allocated Successfully");
-        }
-
-        // =========================================
-        // REMOVE ALLOCATION
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> RemoveAllocation(
-            int id)
-        {
-            var allocation = await _context.RoomAllocations
-                .FindAsync(id);
-
-            if (allocation == null)
-            {
-                return NotFound("Allocation Not Found");
-            }
-
-            var room = await _context.Rooms
-                .FindAsync(allocation.RoomId);
-
-            if (room != null)
-            {
-                room.OccupiedBeds--;
-
-                room.Status = "Available";
-            }
-
-            _context.RoomAllocations.Remove(allocation);
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Allocation Removed Successfully");
+            return View(vm);
         }
     }
 }

@@ -1,128 +1,113 @@
-﻿using Hostel_Management_System.Model;
-using Hostel_Management_System.Model.DbContext;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Hostel_Management_Systems.Models;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace Hostel_Management_System.Controllers
+using Newtonsoft.Json;
+
+using System.Text;
+
+namespace Hostel_MVC.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class RoomController : ControllerBase
+    public class RoomController : Controller
     {
-        private readonly HostelDbContext _context;
+        private readonly HttpClient _client;
 
-        public RoomController(HostelDbContext context)
+        public RoomController(
+            IHttpClientFactory factory)
         {
-            _context = context;
+            _client = factory.CreateClient();
+
+            _client.BaseAddress =
+                new Uri("https://localhost:7255/");
         }
 
         // =========================================
-        // GET ALL ROOMS
+        // TOKEN
+        // =========================================
+
+        private void AddToken()
+        {
+            var token =
+                HttpContext.Session
+                    .GetString("token");
+
+            _client.DefaultRequestHeaders
+                .Authorization =
+                new System.Net.Http.Headers
+                .AuthenticationHeaderValue(
+                    "Bearer",
+                    token.Replace("\"", "")
+                         .Replace("{token:", "")
+                         .Replace("}", ""));
+        }
+
+        // =========================================
+        // ROOM LIST
+        // =========================================
+
+        public async Task<IActionResult> RoomIndex()
+        {
+            AddToken();
+
+            var response =
+                await _client.GetAsync(
+                    "api/Room");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json =
+                    await response.Content
+                        .ReadAsStringAsync();
+
+                var data =
+                    JsonConvert.DeserializeObject
+                    <List<Room>>(json);
+
+                return View(data);
+            }
+
+            return View();
+        }
+
+        // =========================================
+        // CREATE PAGE
         // =========================================
 
         [HttpGet]
-        public async Task<IActionResult> GetRooms()
+        public IActionResult RoomCreate()
         {
-            var data = await _context.Rooms.ToListAsync();
-
-            return Ok(data);
+            return View();
         }
 
         // =========================================
-        // GET ROOM BY ID
+        // CREATE ROOM
         // =========================================
-
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetRoomById(int id)
-        {
-            var data = await _context.Rooms.FindAsync(id);
-
-            if (data == null)
-            {
-                return NotFound("Room Not Found");
-            }
-
-            return Ok(data);
-        }
-
-        // =========================================
-        // ADD ROOM
-        // ADMIN ONLY
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
 
         [HttpPost]
-        public async Task<IActionResult> AddRoom(Room room)
+        public async Task<IActionResult> RoomCreate(Room vm)
         {
-            room.Status = "Available";
+            AddToken();
 
-            _context.Rooms.Add(room);
+            var json =
+                JsonConvert.SerializeObject(vm);
 
-            await _context.SaveChangesAsync();
+            var content =
+                new StringContent(
+                    json,
+                    Encoding.UTF8,
+                    "application/json");
 
-            return Ok("Room Added Successfully");
-        }
+            var response =
+                await _client.PostAsync(
+                    "api/Room",
+                    content);
 
-        // =========================================
-        // UPDATE ROOM
-        // ADMIN ONLY
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateRoom(
-            int id,
-            Room room)
-        {
-            var data = await _context.Rooms.FindAsync(id);
-
-            if (data == null)
+            if (response.IsSuccessStatusCode)
             {
-                return NotFound("Room Not Found");
+                return RedirectToAction("RoomIndex");
             }
 
-            data.RoomNumber = room.RoomNumber;
-
-            data.Capacity = room.Capacity;
-
-            data.OccupiedBeds = room.OccupiedBeds;
-
-            data.Fees = room.Fees;
-
-            data.Status = room.Status;
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Room Updated Successfully");
-        }
-
-        // =========================================
-        // DELETE ROOM
-        // ADMIN ONLY
-        // =========================================
-
-        [Authorize(Roles = "Admin")]
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRoom(int id)
-        {
-            var data = await _context.Rooms.FindAsync(id);
-
-            if (data == null)
-            {
-                return NotFound("Room Not Found");
-            }
-
-            _context.Rooms.Remove(data);
-
-            await _context.SaveChangesAsync();
-
-            return Ok("Room Deleted Successfully");
+            return View();
         }
     }
 }
-
