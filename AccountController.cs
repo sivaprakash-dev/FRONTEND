@@ -21,10 +21,6 @@ namespace Hostel_Management_Systems.Controllers
                 new Uri("https://localhost:7255/");
         }
 
-        // =========================================
-        // LOGIN PAGE
-        // =========================================
-
         [HttpGet]
         public IActionResult Login()
         {
@@ -41,11 +37,7 @@ namespace Hostel_Management_Systems.Controllers
 
             return View();
         }
-
-        // =========================================
-        // LOGIN
-        // =========================================
-
+        
         [HttpPost]
         public async Task<IActionResult> Login(
             AdminLogin vm)
@@ -73,7 +65,6 @@ namespace Hostel_Management_Systems.Controllers
 
                 HttpContext.Session.SetString("token", data!.Token!);
 
-                // Login User Email Save
                 HttpContext.Session.SetString("Email", vm.Email!);
 
                 return RedirectToAction("Index", "Dashboard");
@@ -84,10 +75,6 @@ namespace Hostel_Management_Systems.Controllers
 
             return View();
         }
-
-        // =========================================
-        // LOGOUT
-        // =========================================
 
         public IActionResult Logout()
         {
