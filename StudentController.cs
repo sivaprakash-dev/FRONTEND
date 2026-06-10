@@ -17,55 +17,32 @@ namespace Hostel_MVC.Controllers
         {
             _client = factory.CreateClient();
 
-            _client.BaseAddress =
-                new Uri("https://localhost:7255/");
+            _client.BaseAddress = new Uri("https://localhost:7255/");
         }
-
-        // =========================================
-        // GET TOKEN
-        // =========================================
 
         private void AddToken()
         {
-            var token =
-                HttpContext.Session
-                    .GetString("token");
+            var token = HttpContext.Session.GetString("token");
 
-            _client.DefaultRequestHeaders
-                .Authorization =
-                new System.Net.Http.Headers
-                .AuthenticationHeaderValue(
-                    "Bearer",
-                    token.Replace("\"", "")
-                         .Replace("{token:", "")
-                         .Replace("}", ""));
+            _client.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue
+                ("Bearer",token.Replace("\"", "").Replace("{token:", "").Replace("}", ""));
         }
 
-        // =========================================
-        // STUDENT LIST
-        // =========================================
-
-        public async Task<IActionResult> Indexs(
-     string search,
-     int page = 1)
+        public async Task<IActionResult> Indexs(string search,int page = 1)
         {
             AddToken();
 
-            var response =
-                await _client.GetAsync("api/Student");
+            var response = await _client.GetAsync("api/Student");
 
             if (!response.IsSuccessStatusCode)
             {
                 return View(new List<Student>());
             }
 
-            var json =
-                await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync();
 
-            var students =
-                JsonConvert.DeserializeObject<List<Student>>(json);
-
-            // Global Search
+            var students = JsonConvert.DeserializeObject<List<Student>>(json);
 
             if (!string.IsNullOrEmpty(search))
             {
@@ -73,13 +50,11 @@ namespace Hostel_MVC.Controllers
 
                 students = students.Where(x =>
 
-                    (!string.IsNullOrEmpty(x.Name) &&
-                     x.Name.ToLower().Contains(search))
+                    (!string.IsNullOrEmpty(x.Name) && x.Name.ToLower().Contains(search))
 
                     ||
 
-                    (!string.IsNullOrEmpty(x.Gender) &&
-                     x.Gender.ToLower().Contains(search))
+                    (!string.IsNullOrEmpty(x.Gender) && x.Gender.ToLower().Contains(search))
 
                     ||
 
@@ -87,13 +62,11 @@ namespace Hostel_MVC.Controllers
 
                     ||
 
-                    (!string.IsNullOrEmpty(x.Mobile) &&
-                     x.Mobile.Contains(search))
+                    (!string.IsNullOrEmpty(x.Mobile) && x.Mobile.Contains(search))
 
                     ||
 
-                    (!string.IsNullOrEmpty(x.Email) &&
-                     x.Email.ToLower().Contains(search))
+                    (!string.IsNullOrEmpty(x.Email) && x.Email.ToLower().Contains(search))
 
                 ).ToList();
             }
@@ -102,13 +75,9 @@ namespace Hostel_MVC.Controllers
 
             int totalRecords = students.Count();
 
-            int totalPages =
-                (int)Math.Ceiling((double)totalRecords / pageSize);
+            int totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
 
-            students = students
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            students = students.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
             ViewBag.Search = search;
             ViewBag.CurrentPage = page;
@@ -117,19 +86,11 @@ namespace Hostel_MVC.Controllers
             return View(students);
         }
 
-        // =========================================
-        // CREATE PAGE
-        // =========================================
-
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
-
-        // =========================================
-        // CREATE
-        // =========================================
 
         [HttpPost]
         public async Task<IActionResult> Create(
@@ -137,19 +98,11 @@ namespace Hostel_MVC.Controllers
         {
             AddToken();
 
-            var json =
-                JsonConvert.SerializeObject(vm);
+            var json = JsonConvert.SerializeObject(vm);
 
-            var content =
-                new StringContent(
-                    json,
-                    Encoding.UTF8,
-                    "application/json");
+            var content = new StringContent(json,Encoding.UTF8,"application/json");
 
-            var response =
-                await _client.PostAsync(
-                    "api/Student",
-                    content);
+            var response = await _client.PostAsync("api/Student",content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -164,19 +117,13 @@ namespace Hostel_MVC.Controllers
         {
             AddToken();
 
-            var response =
-                await _client.GetAsync(
-                    $"api/Student/{id}");
+            var response = await _client.GetAsync($"api/Student/{id}");
 
             if (response.IsSuccessStatusCode)
             {
-                var json =
-                    await response.Content
-                        .ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
 
-                var data =
-                    JsonConvert.DeserializeObject
-                    <Student>(json);
+                var data = JsonConvert.DeserializeObject<Student>(json);
 
                 return View(data);
             }
@@ -189,19 +136,11 @@ namespace Hostel_MVC.Controllers
         {
             AddToken();
 
-            var json =
-                JsonConvert.SerializeObject(vm);
+            var json = JsonConvert.SerializeObject(vm);
 
-            var content =
-                new StringContent(
-                    json,
-                    Encoding.UTF8,
-                    "application/json");
+            var content = new StringContent(json,Encoding.UTF8,"application/json");
 
-            var response =
-                await _client.PutAsync(
-                    $"api/Student/{id}",
-                    content);
+            var response = await _client.PutAsync($"api/Student/{id}",content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -216,9 +155,7 @@ namespace Hostel_MVC.Controllers
         {
             AddToken();
 
-            var response =
-                await _client.DeleteAsync(
-                    $"api/Student/{id}");
+            var response = await _client.DeleteAsync($"api/Student/{id}");
 
             if (response.IsSuccessStatusCode)
             {
@@ -233,19 +170,13 @@ namespace Hostel_MVC.Controllers
         {
             AddToken();
 
-            var response =
-                await _client.GetAsync(
-                    $"api/Student/{id}");
+            var response = await _client.GetAsync($"api/Student/{id}");
 
             if (response.IsSuccessStatusCode)
             {
-                var json =
-                    await response.Content
-                        .ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
 
-                var data =
-                    JsonConvert.DeserializeObject
-                    <Student>(json);
+                var data = JsonConvert.DeserializeObject<Student>(json);
 
                 return View(data);
             }
