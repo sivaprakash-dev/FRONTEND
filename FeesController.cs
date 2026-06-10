@@ -13,29 +13,19 @@ namespace Hostel_MVC.Controllers
         {
             _client = factory.CreateClient();
 
-            _client.BaseAddress =
-                new Uri("https://localhost:7255/api");
+            _client.BaseAddress = new Uri("https://localhost:7255/api");
         }
 
         private void AddToken()
         {
-            var token =
-                HttpContext.Session
-                    .GetString("token");
+            var token = HttpContext.Session.GetString("token");
 
             if (!string.IsNullOrEmpty(token))
             {
                 _client.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers
-                    .AuthenticationHeaderValue(
-                        "Bearer",
-                        token);
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer",token);
             }
         }
-
-        // ==========================
-        // FEES LIST
-        // ==========================
 
         public async Task<IActionResult> FeesIndex()
         {
@@ -47,13 +37,9 @@ namespace Hostel_MVC.Controllers
 
             if (response.IsSuccessStatusCode)
             {
-                var json =
-                    await response.Content
-                        .ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
 
-                var data =
-                    JsonConvert.DeserializeObject
-                    <List<Fees>>(json);
+                var data = JsonConvert.DeserializeObject<List<Fees>>(json);
 
                 return View(data);
             }
@@ -61,19 +47,11 @@ namespace Hostel_MVC.Controllers
             return View();
         }
 
-        // ==========================
-        // CREATE PAGE
-        // ==========================
-
         [HttpGet]
         public IActionResult FeesCreate()
         {
             return View();
         }
-
-        // ==========================
-        // CREATE
-        // ==========================
 
         [HttpPost]
         public async Task<IActionResult> FeesCreate(
@@ -81,24 +59,15 @@ namespace Hostel_MVC.Controllers
         {
             AddToken();
 
-            var json =
-                JsonConvert.SerializeObject(vm);
+            var json = JsonConvert.SerializeObject(vm);
 
-            var content =
-                new StringContent(
-                    json,
-                    Encoding.UTF8,
-                    "application/json");
+            var content = new StringContent(json,Encoding.UTF8,"application/json");
 
-            var response =
-                await _client.PostAsync(
-                    "api/Fees",
-                    content);
+            var response = await _client.PostAsync("api/Fees",content);
 
             if (response.IsSuccessStatusCode)
             {
-                return RedirectToAction(
-                    "FeesIndex");
+                return RedirectToAction("FeesIndex");
             }
 
             return View(vm);
@@ -110,10 +79,7 @@ namespace Hostel_MVC.Controllers
         {
             AddToken();
 
-            var response =
-                await _client.PutAsync(
-                    $"api/Fees/{id}",
-                    null);
+            var response = await _client.PutAsync($"api/Fees/{id}",null);
 
             if (response.IsSuccessStatusCode)
             {
@@ -123,22 +89,14 @@ namespace Hostel_MVC.Controllers
             return RedirectToAction("Index");
         }
 
-        // ==========================
-        // DELETE
-        // ==========================
-
         [HttpGet]
-        public async Task<IActionResult> Delete(
-            int id)
+        public async Task<IActionResult> Delete(int id)
         {
             AddToken();
 
-            var response =
-                await _client.DeleteAsync(
-                    $"api/Fees/{id}");
+            var response = await _client.DeleteAsync($"api/Fees/{id}");
 
-            return RedirectToAction(
-                "FeesIndex");
+            return RedirectToAction("FeesIndex");
         }
     }
 }
