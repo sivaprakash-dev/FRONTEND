@@ -9,61 +9,35 @@ namespace Hostel_Management_Systems.Controllers
     {
         private readonly HttpClient _client;
 
-        public DashboardController(
-            IHttpClientFactory factory)
+        public DashboardController(IHttpClientFactory factory)
         {
             _client = factory.CreateClient();
 
-            _client.BaseAddress =
-                new Uri("https://localhost:7255/api/");
+            _client.BaseAddress = new Uri("https://localhost:7255/api/");
         }
 
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // SESSION TOKEN
-
             var token =
-                HttpContext.Session
-                    .GetString("token");
-
-            // NOT LOGIN
+                HttpContext.Session.GetString("token");
 
             if (string.IsNullOrEmpty(token))
             {
-                return RedirectToAction(
-                    "Login",
-                    "Account");
+                return RedirectToAction("Login","Account");
             }
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",token);
 
-            // TOKEN SET
-
-            _client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue(
-                    "Bearer",
-                    token);
-
-            // API CALL
-
-            var response =
-                await _client.GetAsync(
-                    "Dashboard");
-
-            // SUCCESS
+            var response = await _client.GetAsync("Dashboard");
 
             if (response.IsSuccessStatusCode)
             {
-                var json =
-                    await response.Content
-                        .ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
 
-                var data =
-                    JsonConvert.DeserializeObject<Dashboard>(json);
+                var data = JsonConvert.DeserializeObject<Dashboard>(json);
 
                 return View(data);
             }
-
-            // FAIL
 
             HttpContext.Session.Clear();
 
