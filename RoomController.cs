@@ -17,51 +17,28 @@ namespace Hostel_MVC.Controllers
         {
             _client = factory.CreateClient();
 
-            _client.BaseAddress =
-                new Uri("https://localhost:7255/");
+            _client.BaseAddress = new Uri("https://localhost:7255/");
         }
-
-        // =========================================
-        // TOKEN
-        // =========================================
 
         private void AddToken()
         {
-            var token =
-                HttpContext.Session
-                    .GetString("token");
+            var token = HttpContext.Session.GetString("token");
 
-            _client.DefaultRequestHeaders
-                .Authorization =
-                new System.Net.Http.Headers
-                .AuthenticationHeaderValue(
-                    "Bearer",
-                    token.Replace("\"", "")
-                         .Replace("{token:", "")
-                         .Replace("}", ""));
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers
+                .AuthenticationHeaderValue("Bearer",token.Replace("\"", "").Replace("{token:", "").Replace("}", ""));
         }
-
-        // =========================================
-        // ROOM LIST
-        // =========================================
 
         public async Task<IActionResult> RoomIndex()
         {
             AddToken();
 
-            var response =
-                await _client.GetAsync(
-                    "api/Room");
+            var response = await _client.GetAsync("api/Room");
 
             if (response.IsSuccessStatusCode)
             {
-                var json =
-                    await response.Content
-                        .ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
 
-                var data =
-                    JsonConvert.DeserializeObject
-                    <List<Room>>(json);
+                var data = JsonConvert.DeserializeObject<List<Room>>(json);
 
                 return View(data);
             }
@@ -69,38 +46,22 @@ namespace Hostel_MVC.Controllers
             return View();
         }
 
-        // =========================================
-        // CREATE PAGE
-        // =========================================
-
         [HttpGet]
         public IActionResult RoomCreate()
         {
             return View();
         }
 
-        // =========================================
-        // CREATE ROOM
-        // =========================================
-
         [HttpPost]
         public async Task<IActionResult> RoomCreate(Room vm)
         {
             AddToken();
 
-            var json =
-                JsonConvert.SerializeObject(vm);
+            var json = JsonConvert.SerializeObject(vm);
 
-            var content =
-                new StringContent(
-                    json,
-                    Encoding.UTF8,
-                    "application/json");
+            var content = new StringContent(json,Encoding.UTF8,"application/json");
 
-            var response =
-                await _client.PostAsync(
-                    "api/Room",
-                    content);
+            var response = await _client.PostAsync("api/Room",content);
 
             if (response.IsSuccessStatusCode)
             {
