@@ -17,13 +17,8 @@ namespace Hostel_MVC.Controllers
         {
             _client = factory.CreateClient();
 
-            _client.BaseAddress =
-                new Uri("https://localhost:7255/");
+            _client.BaseAddress = new Uri("https://localhost:7255/");
         }
-
-        // =====================================
-        // TOKEN
-        // =====================================
 
         private void AddToken()
         {
@@ -34,32 +29,19 @@ namespace Hostel_MVC.Controllers
                 return;
             }
 
-            _client.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue(
-                    "Bearer",
-                    token);
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer",token);
         }
-
-        // =====================================
-        // ALLOCATION LIST
-        // =====================================
-
         public async Task<IActionResult> Indes()
         {
             AddToken();
 
-            var response =
-                await _client.GetAsync("api/RoomAllocation");
+            var response = await _client.GetAsync("api/RoomAllocation");
 
             if (response.IsSuccessStatusCode)
             {
-                var json =
-                    await response.Content
-                        .ReadAsStringAsync();
+                var json = await response.ReadAsStringAsync();
 
-                var data =
-                    JsonConvert.DeserializeObject
-                    <List<RoomAllocation>>(json);
+                var data = JsonConvert.DeserializeObject<List<RoomAllocation>>(json);
 
                 return View(data);
             }
@@ -67,47 +49,29 @@ namespace Hostel_MVC.Controllers
             return View();
         }
 
-        // =====================================
-        // CREATE PAGE
-        // =====================================
-
         [HttpGet]
         public IActionResult RoomAllCreate()
         {
             return View();
         }
 
-        // =====================================
-        // CREATE
-        // =====================================
-
         [HttpPost]
         public async Task<IActionResult> RoomAllCreate(RoomAllocation vm)
         {
             AddToken();
 
-            var json =
-                JsonConvert.SerializeObject(vm);
+            var json = JsonConvert.SerializeObject(vm);
 
-            var content =
-                new StringContent(
-                    json,
-                    Encoding.UTF8,
-                    "application/json");
+            var content = new StringContent(json,Encoding.UTF8,"application/json");
 
-            var response =
-                await _client.PostAsync(
-                    "api/RoomAllocation",
-                    content);
+            var response = await _client.PostAsync("api/RoomAllocation",content);
 
             if (response.IsSuccessStatusCode)
             {
                 return RedirectToAction("Indes");
             }
 
-            // API Error Message
-            var errorMessage =
-                await response.Content.ReadAsStringAsync();
+            var errorMessage = await response.Content.ReadAsStringAsync();
 
             ViewBag.Error = errorMessage;
 
