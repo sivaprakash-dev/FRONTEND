@@ -24,15 +24,11 @@ namespace Hostel_Management_System.Controllers
             _context = context;
             _configuration = configuration;
         }
-
-        // ADMIN REGISTER
-        // =========================================
-
+        
         [HttpPost("admin-register")]
         public async Task<IActionResult> AdminRegister(AdminRegDto dto)
         {
-            var existingAdmin = await _context.Admins
-                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            var existingAdmin = await _context.Admins.FirstOrDefaultAsync(x => x.Email == dto.Email);
 
             if (existingAdmin != null)
             {
@@ -69,18 +65,11 @@ namespace Hostel_Management_System.Controllers
             return Ok("Admin Registration Successful");
         }
 
-        // =========================================
-        // ADMIN LOGIN
-        // =========================================
-
         [HttpPost("admin-login")]
-        public async Task<IActionResult> AdminLogin(
-    AdminLoginDto dto)
+        public async Task<IActionResult> AdminLogin(AdminLoginDto dto)
         {
-            var admin = await _context.Admins
-                .FirstOrDefaultAsync(x =>
-                    x.Email == dto.Email &&
-                    x.Password == dto.Password);
+            var admin = await _context.Admins.FirstOrDefaultAsync
+            (x =>x.Email == dto.Email && x.Password == dto.Password);
 
             if (admin == null)
             {
@@ -94,16 +83,11 @@ namespace Hostel_Management_System.Controllers
         new Claim(ClaimTypes.Role, admin.Role!)
     };
 
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(
-                    _configuration["Jwt:Key"]!));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
 
-            var creds = new SigningCredentials(
-                key,
-                SecurityAlgorithms.HmacSha256);
+            var creds = new SigningCredentials(key,SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
+            var token = new JwtSecurityToken(issuer: _configuration["Jwt:Issuer"],
 
                 audience: _configuration["Jwt:Audience"],
 
@@ -115,20 +99,14 @@ namespace Hostel_Management_System.Controllers
 
             return Ok(new
             {
-                token = new JwtSecurityTokenHandler()
-                    .WriteToken(token)
+                token = new JwtSecurityTokenHandler().WriteToken(token)
             });
         }
-
-        // =========================================
-        // STUDENT REGISTER
-        // =========================================
-
+        
         [HttpPost("student-register")]
         public async Task<IActionResult> StudentRegister(StudentRegDto dto)
         {
-            var existingStudent = await _context.Students
-                .FirstOrDefaultAsync(x => x.Email == dto.Email);
+            var existingStudent = await _context.Students.FirstOrDefaultAsync(x => x.Email == dto.Email);
 
             if (existingStudent != null)
             {
@@ -162,25 +140,17 @@ namespace Hostel_Management_System.Controllers
 
             return Ok("Student Registration Successful");
         }
-
-        // =========================================
-        // STUDENT LOGIN
-        // =========================================
-
+        
         [HttpPost("student-login")]
         public async Task<IActionResult> StudentLogin(StudentLoginDto dto)
         {
             var student = await _context.Students
-                .FirstOrDefaultAsync(x =>
-                    x.Email == dto.Email &&
-                    x.Password == dto.Password);
+                .FirstOrDefaultAsync(x => x.Email == dto.Email && x.Password == dto.Password);
 
             if (student == null)
             {
                 return Unauthorized("Invalid Email or Password");
             }
-
-            // CLAIMS
 
             var claims = new[]
             {
@@ -188,26 +158,14 @@ namespace Hostel_Management_System.Controllers
 
                 new Claim(ClaimTypes.Role, "Student"),
 
-                new Claim("StudentId",
-                    student.StudentId.ToString())
+                new Claim("StudentId",student.StudentId.ToString())
             };
 
-            // KEY
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+            
+            var creds = new SigningCredentials(key,SecurityAlgorithms.HmacSha256);
 
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(
-                    _configuration["Jwt:Key"]!));
-
-            // SIGNING
-
-            var creds = new SigningCredentials(
-                key,
-                SecurityAlgorithms.HmacSha256);
-
-            // TOKEN
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
+            var token = new JwtSecurityToken(issuer: _configuration["Jwt:Issuer"],
 
                 audience: _configuration["Jwt:Audience"],
 
@@ -217,12 +175,9 @@ namespace Hostel_Management_System.Controllers
 
                 signingCredentials: creds);
 
-            // RETURN TOKEN
-
             return Ok(new
             {
-                token = new JwtSecurityTokenHandler()
-                    .WriteToken(token)
+                token = new JwtSecurityTokenHandler().WriteToken(token)
             });
         }
         [Authorize(Roles = "Admin")]
@@ -233,10 +188,6 @@ namespace Hostel_Management_System.Controllers
 
             return Ok(data);
         }
-
-        // =========================================
-        // ADMIN + STUDENT
-        // =========================================
 
         [Authorize(Roles = "Admin,Student")]
         [HttpGet("{id}")]
@@ -252,11 +203,7 @@ namespace Hostel_Management_System.Controllers
 
             return Ok(data);
         }
-
-        // =========================================
-        // STUDENT ONLY
-        // =========================================
-
+        
         [Authorize(Roles = "Student")]
         [HttpGet("dashboard")]
         public IActionResult StudentDashboard()
