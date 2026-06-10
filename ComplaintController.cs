@@ -18,10 +18,6 @@ namespace Hostel_MVC.Controllers
                 new Uri("https://localhost:7255/");
         }
 
-        // ============================
-        // TOKEN
-        // ============================
-
         private void AddToken()
         {
             var token =
@@ -30,75 +26,46 @@ namespace Hostel_MVC.Controllers
 
             if (!string.IsNullOrEmpty(token))
             {
-                _client.DefaultRequestHeaders
-                    .Authorization =
-                    new System.Net.Http.Headers
-                    .AuthenticationHeaderValue(
-                        "Bearer",
-                        token);
+                _client.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Header.AuthenticationHeaderValue("Bearer",token);
             }
         }
-
-        // ============================
-        // COMPLAINT LIST
-        // ============================
 
         public async Task<IActionResult> CompIndex()
         {
             AddToken();
 
-            var response =
-                await _client.GetAsync(
-                    "api/Complaint");
+            var response = await _client.GetAsync("api/Complaint");
 
             if (response.IsSuccessStatusCode)
             {
                 var json =
-                    await response.Content
-                        .ReadAsStringAsync();
+                    await response.Content.ReadAsStringAsync();
 
-                var data =
-                    JsonConvert.DeserializeObject
-                    <List<Complaint>>(json);
+                var data = JsonConvert.DeserializeObject<List<Complaint>>(json);
 
                 return View(data);
             }
 
             return View();
         }
-
-        // ============================
-        // CREATE PAGE
-        // ============================
-
+        
         [HttpGet]
         public IActionResult CompCreate()
         {
             return View();
         }
 
-        // ============================
-        // CREATE COMPLAINT
-        // ============================
-
         [HttpPost]
         public async Task<IActionResult> CompCreate(Complaint vm)
         {
             AddToken();
 
-            var json =
-                JsonConvert.SerializeObject(vm);
+            var json = JsonConvert.SerializeObject(vm);
 
-            var content =
-                new StringContent(
-                    json,
-                    Encoding.UTF8,
-                    "application/json");
+            var content = new StringContent(json,Encoding.UTF8,"application/json");
 
-            var response =
-                await _client.PostAsync(
-                    "api/Complaint",
-                    content);
+            var response = await _client.PostAsync("api/Complaint",content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -106,16 +73,10 @@ namespace Hostel_MVC.Controllers
                     "CompIndex");
             }
 
-            ViewBag.Error =
-                await response.Content
-                    .ReadAsStringAsync();
+            ViewBag.Error = await response.Content.ReadAsStringAsync();
 
             return View(vm);
         }
-
-        // ============================
-        // UPDATE STATUS PAGE
-        // ============================
 
         [HttpGet]
         public IActionResult StatusUpdate(
@@ -126,10 +87,6 @@ namespace Hostel_MVC.Controllers
             return View();
         }
 
-        // ============================
-        // UPDATE STATUS
-        // ============================
-
         [HttpPost]
         public async Task<IActionResult> StatusUpdate(
             int id,
@@ -137,43 +94,28 @@ namespace Hostel_MVC.Controllers
         {
             AddToken();
 
-            var json =
-                JsonConvert.SerializeObject(vm);
+            var json = JsonConvert.SerializeObject(vm);
 
-            var content =
-                new StringContent(
-                    json,
-                    Encoding.UTF8,
-                    "application/json");
+            var content = new StringContent(json,Encoding.UTF8,"application/json");
 
-            var response =
-                await _client.PutAsync(
-                    $"api/Complaint/{id}",
-                    content);
+            var response = await _client.PutAsync($"api/Complaint/{id}",content);
 
             if (response.IsSuccessStatusCode)
             {
-                return RedirectToAction(
-                    "CompIndex");
+                return RedirectToAction("CompIndex");
             }
 
             return View(vm);
         }
-
-        // ============================
-        // DELETE
-        // ============================
 
         [HttpGet]
         public async Task<IActionResult> CompDelete(int id)
         {
             AddToken();
 
-            await _client.DeleteAsync(
-                $"api/Complaint/{id}");
+            await _client.DeleteAsync($"api/Complaint/{id}");
 
-            return RedirectToAction(
-                "CompIndex");
+            return RedirectToAction("CompIndex");
         }
     }
 }
