@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Todo List</title>
+    <link rel="stylesheet" href="zoom.css">
+</head>
+<body>
+    <div>
+
+    <h2>Todo List</h2>
+
+    <input type="text" id="todoInput" placeholder="Enter task">
+    <button onclick="addTodo()">Add</button>
+
+    <ol id="todoList"></ol>
+    </div>
+
+    <script>
+        function addTodo() {
+    let input = document.getElementById("todoInput");
+    let task = input.value;
+
+    if (task === "") {
+        alert("Enter the Task");
+    }
+
+    let li = document.createElement("li");
+
+    // text span
+    let span = document.createElement("span");
+    span.innerText = task;
+
+    // edit button
+    let editBtn = document.createElement("button");
+    editBtn.innerText = "Edit";
+
+    editBtn.onclick = function () {
+        let newTask = prompt("Update task", span.innerText);
+        if (newTask !== null && newTask !== "") {
+            span.innerText = newTask;
+        }
+    };
+
+    // delete button
+    let deleteBtn = document.createElement("button");
+    deleteBtn.innerText = "Delete";
+
+    deleteBtn.onclick = function () {
+        li.remove();
+    };
+
+    li.appendChild(span);
+    li.appendChild(editBtn);
+    li.appendChild(deleteBtn);
+
+    document.getElementById("todoList").appendChild(li);
+    input.value = "";
+}
+    </script>
+</body>
+</html>
