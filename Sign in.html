@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<body>
+<center>
+    <br><br>
+    <form onsubmit="return register()">
+        <h1>Register Here</h1>
+        <p>Please fill in the details to create an account with us.</p>
+        <hr style="width: 500px;">
+
+        <div>
+            <label><b>Enter Email</b></label><br>
+            <input id="email" placeholder="Enter Email"
+                   type="email" required
+                   style="width:300px;height:30px;border-radius:5px;">
+        </div>
+        <br>
+
+        <div>
+            <label><b>Password</b></label><br>
+            <input id="password" placeholder="Enter Password"
+                   type="password" required
+                   style="width:300px;height:30px;border-radius:5px;">
+        </div>
+        <br>
+
+        <div>
+            <label><b>Confirm Password</b></label><br>
+            <input id="cpassword" placeholder="Confirm Password"
+                   type="password" required
+                   style="width:300px;height:30px;border-radius:5px;">
+        </div>
+
+        <br>
+        <button type="submit"
+                style="width:300px;height:30px;border-radius:5px;background-color:green;color:white;cursor:pointer;">
+            Register
+        </button>
+    </form>
+</center>
+
+<script>
+function register() {
+    let email = document.getElementById("email").value;
+    let password = document.getElementById("password").value;
+    let cpassword = document.getElementById("cpassword").value;
+
+    if (password !== cpassword) {
+        alert("Password and Confirm Password same illa ❌");
+        return false;
+    }
+
+    if (password.length < 6) {
+        alert("Password kammiya 6 characters irukkanum ❗");
+        return false;
+    }
+
+    alert("Registration Successful ✅");
+    return true;
+}
+</script>
+</body>
+</html>
