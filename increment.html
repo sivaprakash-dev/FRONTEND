@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #countlabel{
+            text-align: center;
+            margin-top: 220px;
+            width: 150px;
+            height: 80px;
+            box-shadow:inset  15px 15px 102px rgba(0, 0, 0, 0.16);
+            margin-left: 680px;
+            color: darkorange;
+            border-radius: 10%;
+        }
+        #child{
+            text-align: center;
+        }
+        h1{
+            font-size: 400%;
+        }
+        button{
+            margin: 10px;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            border-radius: 10px;
+            border: 0px solid black;
+            box-shadow: black 2px 2px 10px;
+            width: 120px;
+            height: 45px;
+            color: gold;
+            background: linear-gradient(rgb(246, 25, 25),rgb(80, 79, 79));
+            font-weight: bolder;
+            font-size: large;
+            cursor: pointer;
+        }
+        button:hover{
+            background-color: hsl(240, 90%, 60%);
+        }
+        button:active{
+            background-color: brown;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="countlabel">0</h1>
+    <div id="child">
+        <button type="button" id="Incr" onclick="DisplayBtnValues(Increment)">Increment</button>
+        <button type="button" id="re" onclick="DisplayBtnValues(reset)">reset</button>
+        <button type="button" id="Decr" onclick="DisplayBtnValues(Decrement)">Decrement</button>
+    </div>
+    <script src="increment.js"></script>
+</body>
+</html>
