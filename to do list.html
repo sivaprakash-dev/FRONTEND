@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+       
+        .inner{
+            width: 200px;
+            height: 30px;
+            border-radius: 5px;
+            border: 1px solid black;
+        }
+        .add{
+            width: 50px;
+            height: 30px;
+            background-color: rgb(240, 103, 130);
+            border-radius: 8px;
+            border: 1px;
+            cursor: pointer;
+        }
+        h1{
+            color: rgb(14, 14, 94);
+        }
+    </style>
+</head>
+<body>
+        <h1>To Do List</h1>
+    <input class="inner" placeholder="Enter your task" type="text">
+    <button class="add" onclick="addtodo()">Add</button>
+    <ul id="list"></ul>
+    <script>
+        function addtodo(){
+        let input=document.querySelector(".inner")
+        let task=input.value
+        if(task ===""){
+            alert("Enter The Task")
+            return
+        }
+           let del = document.createElement("button")
+    del.innerText = "Delete"
+    del.onclick = function(){
+        li.remove()
+    }
+        let list=document.querySelector("#list")
+        let li=document.createElement("li")
+        li.innerText=input.value
+
+        list.appendChild(li)
+        input.value=""
+        }
+    </script>
+</body>
+</html>
