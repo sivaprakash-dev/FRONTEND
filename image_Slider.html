@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Slider</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="slider">
+
+        <img id="slide" src="https://picsum.photos/id/1015/800/400" alt="Slider Image">
+
+        <button class="prev" onclick="prevSlide()">❮</button>
+        <button class="next" onclick="nextSlide()">❯</button>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
+
+
+<style>
+    *{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#f4f4f4;
+    font-family:Arial, sans-serif;
+}
+
+.slider{
+    width:800px;
+    max-width:90%;
+    position:relative;
+    overflow:hidden;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+}
+
+.slider img{
+    width:100%;
+    display:block;
+    transition:0.5s ease-in-out;
+}
+
+button{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    background:rgba(0,0,0,0.5);
+    color:white;
+    border:none;
+    padding:15px;
+    cursor:pointer;
+    font-size:24px;
+    border-radius:50%;
+}
+
+.prev{
+    left:10px;
+}
+
+.next{
+    right:10px;
+}
+
+button:hover{
+    background:rgba(0,0,0,0.8);
+}
+</style>
+
+
+<script>
+    const images = [
+    "https://picsum.photos/id/1015/800/400",
+    "https://picsum.photos/id/1016/800/400",
+    "https://picsum.photos/id/1018/800/400",
+    "https://picsum.photos/id/1020/800/400"
+];
+
+let currentIndex = 0;
+
+const slide = document.getElementById("slide");
+
+function showSlide(index){
+    slide.src = images[index];
+}
+
+function nextSlide(){
+    currentIndex++;
+
+    if(currentIndex >= images.length){
+        currentIndex = 0;
+    }
+
+    showSlide(currentIndex);
+}
+
+function prevSlide(){
+    currentIndex--;
+
+    if(currentIndex < 0){
+        currentIndex = images.length - 1;
+    }
+
+    showSlide(currentIndex);
+}
+</script>
