@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Form</title>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Feedback Form</h2>
+
+        <form>
+
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" placeholder="Enter your name">
+            </div>
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" placeholder="Enter your email">
+            </div>
+
+            <div class="form-group">
+                <label>Service Used</label>
+                <select>
+                    <option>Select Service</option>
+                    <option>Website</option>
+                    <option>Mobile App</option>
+                    <option>Customer Support</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Rate Your Experience</label>
+
+                <div class="rating">
+                    <label><input type="radio" name="rate"> 1</label>
+                    <label><input type="radio" name="rate"> 2</label>
+                    <label><input type="radio" name="rate"> 3</label>
+                    <label><input type="radio" name="rate"> 4</label>
+                    <label><input type="radio" name="rate"> 5</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Your Feedback</label>
+                <textarea rows="5" placeholder="Write your feedback here..."></textarea>
+            </div>
+
+            <button type="submit">Submit Feedback</button>
+
+        </form>
+    </div>
+
+</body>
+</html>
+
+
+<style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, sans-serif;
+        }
+
+        body{
+            background:#f4f4f4;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            min-height:100vh;
+        }
+
+        .container{
+            background:#fff;
+            width:450px;
+            padding:30px;
+            border-radius:12px;
+            box-shadow:0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        h2{
+            text-align:center;
+            color:#333;
+            margin-bottom:20px;
+        }
+
+        .form-group{
+            margin-bottom:15px;
+        }
+
+        label{
+            display:block;
+            margin-bottom:5px;
+            font-weight:bold;
+        }
+
+        input,
+        textarea,
+        select{
+            width:100%;
+            padding:10px;
+            border:1px solid #ccc;
+            border-radius:6px;
+            font-size:15px;
+        }
+
+        textarea{
+            resize:none;
+        }
+
+        .rating{
+            display:flex;
+            justify-content:space-between;
+            margin-top:8px;
+        }
+
+        .rating label{
+            font-weight:normal;
+        }
+
+        button{
+            width:100%;
+            background:#007bff;
+            color:white;
+            border:none;
+            padding:12px;
+            border-radius:6px;
+            font-size:16px;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#0056b3;
+        }
+    </style>
